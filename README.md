@@ -1,0 +1,2 @@
+# MMCRPC
+MultiMC Discord RPC
