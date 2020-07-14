@@ -78,8 +78,8 @@ public class Main {
 
                     if (filename.toFile().getName().equals("currentcfg.txt")) {
                         try {
-                            System.out.println("New Change, reading " + jar.getParent() + "\\currentcfg.txt");
-                            this.setRPC(new String(Files.readAllBytes(Paths.get(jar.getParent() + "\\currentcfg.txt"))));
+                            System.out.println("New Change, reading " + jar.getParent() + "/currentcfg.txt");
+                            this.setRPC(new String(Files.readAllBytes(Paths.get(jar.getParent() + "/currentcfg.txt"))));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
