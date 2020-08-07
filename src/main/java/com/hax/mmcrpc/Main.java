@@ -9,7 +9,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.*;
-import java.util.Arrays;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
@@ -22,7 +23,7 @@ public class Main {
             String path = args[1].replaceFirst("\"", "");
 
             try {
-                FileWriter myWriter = null;
+                FileWriter myWriter;
                 myWriter = new FileWriter(path);
                 myWriter.write(content);
                 myWriter.close();
@@ -51,37 +52,44 @@ public class Main {
             System.out.println("Started watching directory: " + dir.toString());
 
             try {
-                WatchKey key = dir.register(watcher, ENTRY_MODIFY);
-            } catch (IOException x) {
-                System.err.println(x);
+                dir.register(watcher, ENTRY_MODIFY);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
             for (; ; ) {
 
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
+                LocalDateTime now = LocalDateTime.now();
+
                 // wait for key to be signaled
-                WatchKey key;
+                WatchKey key = null;
                 try {
-                    key = watcher.take();
+                    if (watcher != null) {
+                        key = watcher.take();
+                    }
                 } catch (InterruptedException x) {
                     return;
                 }
 
-                for (WatchEvent<?> event : key.pollEvents()) {
-                    WatchEvent.Kind<?> kind = event.kind();
+                if (key != null) {
+                    for (WatchEvent<?> event : key.pollEvents()) {
+                        WatchEvent.Kind<?> kind = event.kind();
 
-                    if (kind == OVERFLOW) {
-                        continue;
-                    }
+                        if (kind == OVERFLOW) {
+                            continue;
+                        }
 
-                    WatchEvent<Path> ev = (WatchEvent<Path>) event;
-                    Path filename = ev.context();
+                        WatchEvent<Path> ev = (WatchEvent<Path>) event;
+                        Path filename = ev.context();
 
-                    if (filename.toFile().getName().equals("currentcfg.txt")) {
-                        try {
-                            System.out.println("New Change, reading " + jar.getParent() + "/currentcfg.txt");
-                            this.setRPC(new String(Files.readAllBytes(Paths.get(jar.getParent() + "/currentcfg.txt"))));
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        if (filename.toFile().getName().equals("currentcfg.txt")) {
+                            try {
+                                System.out.println(dtf.format(now)+" | New Change, reading " + jar.getParent() + "/currentcfg.txt");
+                                this.setRPC(new String(Files.readAllBytes(Paths.get(jar.getParent() + "/currentcfg.txt"))), now, dtf);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -89,7 +97,10 @@ public class Main {
                 // Reset the key -- this step is critical if you want to
                 // receive further watch events.  If the key is no longer valid,
                 // the directory is inaccessible so exit the loop.
-                boolean valid = key.reset();
+                boolean valid = false;
+                if (key != null) {
+                    valid = key.reset();
+                }
                 if (!valid) {
                     break;
                 }
@@ -123,7 +134,7 @@ public class Main {
         System.out.println("Started RPC");
     }
 
-    public void setRPC(String name) {
+    public void setRPC(String name, LocalDateTime now, DateTimeFormatter dtf) {
         if (!initialized)
             this.startRPC();
 
@@ -131,7 +142,7 @@ public class Main {
             System.out.println("Clearing RPC");
             lib.Discord_ClearPresence();
         } else {
-            System.out.println("Setting RPC to: "+name);
+            System.out.println(dtf.format(now)+" | Setting RPC to: "+name);
             DiscordRichPresence presence = new DiscordRichPresence();
             presence.startTimestamp = System.currentTimeMillis() / 1000;
             presence.details = "Profile: " + name;
