@@ -139,7 +139,7 @@ public class Main {
             this.startRPC();
 
         if (name.equals(" ")) {
-            System.out.println("Clearing RPC");
+            System.out.println(dtf.format(now)+" | Clearing RPC");
             lib.Discord_ClearPresence();
         } else {
             System.out.println(dtf.format(now)+" | Setting RPC to: "+name);
