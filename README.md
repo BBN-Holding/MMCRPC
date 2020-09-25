@@ -14,3 +14,10 @@ cd C:\MMCRPC
 java -jar MMCRPC.jar
 pause
 ```
+
+## Libs used
+https://github.com/MinnDevelopment/java-discord-rpc
+
+## License
+
+MMCRPC is licensed under the Apache 2.0 License.
